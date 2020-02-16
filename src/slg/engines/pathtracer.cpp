@@ -525,11 +525,11 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 		const DirectLightResult directLightResult = DirectLightSampling(
 				device, scene,
 				eyeRay.time,
+				sampler->GetSample(sampleOffset + 3),
 				sampler->GetSample(sampleOffset + 1),
 				sampler->GetSample(sampleOffset + 2),
-				sampler->GetSample(sampleOffset + 3),
 				sampler->GetSample(sampleOffset + 4),
-				sampler->GetSample(sampleOffset + 5),
+				sampler->GetSample(sampleOffset + 7),
 				pathInfo, 
 				pathThroughput, bsdf, &sampleResult);
 
@@ -554,8 +554,8 @@ void PathTracer::RenderEyePath(IntersectionDevice *device,
 			}
 		} else {
 			bsdfSample = bsdf.Sample(&sampledDir,
+					sampler->GetSample(sampleOffset + 5),
 					sampler->GetSample(sampleOffset + 6),
-					sampler->GetSample(sampleOffset + 7),
 					&bsdfPdfW, &cosSampledDir, &bsdfEvent);
 			pathInfo.isPassThroughPath = false;
 		}
@@ -943,7 +943,7 @@ void PathTracer::ParseOptions(const luxrays::Properties &cfg, const luxrays::Pro
 
 	// Update eye sample size
 	eyeSampleBootSize = 5;
-	eyeSampleStepSize = 9;
+	eyeSampleStepSize = 10; // This needs to be even in order to sample dimensions that should be sampled together as the correct pair
 	eyeSampleSize = 
 		eyeSampleBootSize + // To generate eye ray
 		(maxPathDepth.depth + 1) * eyeSampleStepSize; // For each path vertex
