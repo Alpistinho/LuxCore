@@ -55,7 +55,6 @@ void PathCPURenderThread::RenderFunc() {
 			nullptr, engine->samplerSharedData, Properties());
 	eyeSampler->SetThreadIndex(threadIndex);
 	eyeSampler->RequestSamples(PIXEL_NORMALIZED_ONLY, pathTracer.eyeSampleSize);
-	SLG_LOG("Requested " << pathTracer.eyeSampleSize << "samples to Sampler");
 
 	if (pathTracer.hybridBackForwardEnable) {
 		// Light path sampler is always Metropolis

@@ -34,14 +34,13 @@ namespace slg {
 class PMJ02Sequence {
 public:
 	PMJ02Sequence(luxrays::RandomGenerator *rndGen);
+    PMJ02Sequence(const u_int seed);
 	~PMJ02Sequence();
 
 	void RequestSamples(const u_int size);
 
-	float GetSample(const u_int pixelIndex, const u_int pass);
-
-	u_int rngPass;
-	std::vector<u_int> dimensionsIndexes;
+	float GetSample(const u_int pass, const u_int index);
+	std::vector<float> GetSamples(const u_int pass);
 
 private:
 	// Generates for a single pixel index
@@ -83,6 +82,8 @@ private:
 	// A vector with each pair of dimensions
 	//	A vector with the (num_samples) 2D samples for that pixel
 	std::vector<std::vector<float2>> samplePoints;
+
+    bool localRng;
 
 };
 

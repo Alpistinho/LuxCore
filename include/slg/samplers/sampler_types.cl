@@ -86,6 +86,13 @@ typedef struct {
 	unsigned int pass;
 } TilePathSample;
 
+typedef struct {
+	unsigned int rngPass;
+
+	unsigned int pass;
+
+} PMJ02Sample;
+
 //------------------------------------------------------------------------------
 // Sampler shared data types
 //------------------------------------------------------------------------------
@@ -119,6 +126,11 @@ typedef struct {
 	// Plus Sobol directions array
 } TilePathSamplerSharedData;
 
+typedef struct {
+	unsigned int pixelBucketIndex;
+	float adaptiveStrength;
+} PMJ02SamplerSharedData;
+
 //------------------------------------------------------------------------------
 // Sampler data types
 //------------------------------------------------------------------------------
@@ -127,7 +139,8 @@ typedef enum {
 	RANDOM = 0,
 	METROPOLIS = 1,
 	SOBOL = 2,
-	TILEPATHSAMPLER = 3
+	TILEPATHSAMPLER = 3,
+	PMJ02 = 4
 } SamplerType;
 
 typedef struct {
@@ -143,6 +156,9 @@ typedef struct {
 			float largeMutationProbability, imageMutationRange;
 			unsigned int maxRejects;
 		} metropolis;
+				struct {
+			float adaptiveStrength;
+		} pmj02;
 	};
 } Sampler;
 

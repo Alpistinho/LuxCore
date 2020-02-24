@@ -30,16 +30,27 @@ using namespace slg;
 
 PMJ02Sequence::PMJ02Sequence(luxrays::RandomGenerator *rnd) : 
 	rndGen(rnd), num_samples(1024) {
+    localRng = false;
+	shufflingSeed = rndGen->uintValue();
+	SLG_LOG("Random in sequence constructor: "<< shufflingSeed);
 
+}
+
+PMJ02Sequence::PMJ02Sequence(const u_int seed) : num_samples(1024) {
+    localRng = true;
+    rndGen = new luxrays::RandomGenerator(seed);
 	shufflingSeed = rndGen->uintValue();
 	SLG_LOG("Random in sequence constructor: "<< shufflingSeed);
 
 }
 
 PMJ02Sequence::~PMJ02Sequence() {
+    if (localRng) delete rndGen;
 }
 
 void PMJ02Sequence::RequestSamples(const u_int size) {
+    // Samples already requested
+    if (samplePoints.size() > 0) return; 
 	// We cannot generate an odd number of dimensions
 	u_int tablesToGenerate = size / 2;
 	if (size % 2) tablesToGenerate += 1;
@@ -61,11 +72,24 @@ float PMJ02Sequence::GetSample(const u_int pass, const u_int index) {
 	// Revert to random if more samples than generated are being requested
 	if (pass > num_samples) return rndGen->floatValue();
 
-	const u_int dimensionIndex = dimensionsIndexes[index/2];
+	const u_int dimensionIndex = (index / 2);
 	if (index % 2) {
 		return samplePoints[dimensionIndex][pass].y;
 	} 
 	return samplePoints[dimensionIndex][pass].x;
+}
+
+std::vector<float> PMJ02Sequence::GetSamples(const u_int pass) {
+
+	std::vector<float> samples;
+	samples.reserve(samplePoints.size() * 2);
+	// TODO: Implement fallback after more samples than requested
+	for (u_int i = 0; i < samplePoints.size(); i++) {
+		samples.push_back(samplePoints[i][pass].x);
+		samples.push_back(samplePoints[i][pass].y);
+	}
+
+	return samples;
 }
 
 
@@ -209,10 +233,3 @@ void PMJ02Sequence::shuffle(float2 points[], u_int size) {
 	}
 }
 
-u_int PMJ02Sequence::cmj_hash_simple(u_int i, u_int p) {
-	i = (i ^ 61) ^ p;
-	i += i << 3;
-	i ^= i >> 4;
-	i *= 0x27d4eb2d;
-	return i;
-}

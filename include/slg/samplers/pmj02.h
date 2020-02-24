@@ -23,6 +23,9 @@
 #include <vector>
 #include <array>
 
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
+
 #include "luxrays/core/randomgen.h"
 #include "luxrays/utils/atomic.h"
 #include "slg/slg.h"
@@ -51,6 +54,10 @@ public:
 
 	u_int GetNewPixelPass(const u_int pixelIndex = 0);
 
+    void RequestSamples(const u_int size);
+	float GetSample(const u_int pass, const u_int index);
+	std::vector<float> GetSamples(const u_int pass);
+
 	Film *engineFilm;
 	u_int seedBase;
 	u_int filmRegionPixelCount;
@@ -58,11 +65,16 @@ public:
 private:
 	void Init(const u_int seed, Film *engineFlm);
 
+    PMJ02Sequence pmj02sequence;
+	u_int requestedSamples;
+
 	luxrays::SpinLock spinLock;
 	u_int pixelIndex;
 
 	// Holds the current pass for each pixel when using adaptive sampling
 	std::vector<u_int> passPerPixel;
+
+	boost::shared_mutex sampleGenerationMutex;
 };
 
 //------------------------------------------------------------------------------
@@ -105,14 +117,18 @@ private:
 
 	static const luxrays::Properties &GetDefaultProps();
 
+	uint64_t next_random();
+
 	PMJ02SamplerSharedData *sharedData;
-	PMJ02Sequence pmj02sequence;
+
 	float adaptiveStrength;
 
 	float sample0, sample1;
-	u_int pixelIndexBase, pixelIndexOffset, pass;
+	u_int pixelIndexBase, pixelIndexOffset, pass, pixelIndex;
 
-	luxrays::TauswortheRandomGenerator rngGenerator;
+	std::vector<float> currentSamples;
+
+	uint64_t seed[2];
 };
 
 }
