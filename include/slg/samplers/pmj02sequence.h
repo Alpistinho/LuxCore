@@ -58,11 +58,11 @@ public:
     ~PMJ02SampleSequenceGenerator_Pharr();
     void ProgressiveMultiJittered02Algorithm2D(int numberOfSamplesToGenerate, int numberOfCandidates = 10);
     void exportSampleSet(std::string &outputPath);
+    SamplePMJ* generatedSamples;
 
 private:
     luxrays::RandomGenerator *randomNumberGenerator;
     int numberOfSamplesToGenerate;
-    SamplePMJ* generatedSamples;
     std::vector< std::vector<bool> > occupiedStrata;
     int* xhalves;
     int* yhalves;
@@ -127,31 +127,14 @@ private:
 		float y;
 	};
 
-	void generate_2D(float2 points[], u_int size);
-	void mark_occupied_strata(float2 points[], u_int N);
-	void generate_sample_point(float2 points[], float i, float j, float xhalf, float yhalf, u_int n, u_int N);
-	void extend_sequence_even(float2 points[], u_int N);
-	void extend_sequence_odd(float2 points[], u_int N);
-	void mark_occupied_strata1(float2 pt, u_int NN);
-	bool is_occupied(float2 pt, u_int NN);
-	void shuffle(float2 points[], u_int size);
-	u_int cmj_hash_simple(u_int i, u_int p);
-
-	std::vector<std::vector<bool>> occupiedStrata;
-	std::vector<bool> occupied1Dx, occupied1Dy;
-
-	u_int shufflingSeed;
+	void shuffle(SamplePMJ points[], u_int size);
 
 	// How many samples should be generated at once
 	u_int num_samples;
 
-	// Current sample being generated
-	// Value is only valid during a single generate_2d call
-	u_int current_sample = 1;
-
 	// A vector with each pair of dimensions
 	//	A vector with the (num_samples) 2D samples for that pixel
-	std::vector<std::vector<float2>> samplePoints;
+	std::vector<std::vector<SamplePMJ>> samplePoints;
 
     bool localRng;
 
