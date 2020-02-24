@@ -28,6 +28,76 @@
 namespace slg {
 
 //------------------------------------------------------------------------------
+// SamplePMJ
+//------------------------------------------------------------------------------
+
+class SamplePMJ {
+private:
+    int dimension;
+    float* coordinates;
+public:
+    SamplePMJ(int dimension = 2);
+    float& operator[](int index);
+    void deleteSample();
+};
+
+struct Node
+{
+    bool occupied, leaf;
+    int min_val, max_val;
+    int left, right;
+};
+
+//------------------------------------------------------------------------------
+// PMJ02SampleSequenceGenerator_Pharr
+//------------------------------------------------------------------------------
+
+class PMJ02SampleSequenceGenerator_Pharr {
+public:
+    PMJ02SampleSequenceGenerator_Pharr(luxrays::RandomGenerator *rnd);
+    ~PMJ02SampleSequenceGenerator_Pharr();
+    void ProgressiveMultiJittered02Algorithm2D(int numberOfSamplesToGenerate, int numberOfCandidates = 10);
+    void exportSampleSet(std::string &outputPath);
+
+private:
+    luxrays::RandomGenerator *randomNumberGenerator;
+    int numberOfSamplesToGenerate;
+    SamplePMJ* generatedSamples;
+    std::vector< std::vector<bool> > occupiedStrata;
+    int* xhalves;
+    int* yhalves;
+    int numSamples;
+    int numberOfCandidates;
+    int grid_dim;
+    std::vector<Node> x_tree, y_tree;
+    std::vector<int> x_offsets, y_offsets;
+    std::vector<SamplePMJ*> grid;
+    int x_tree_idx, y_tree_idx;
+
+    float min_dist;
+
+    void extendSequenceEven(int alreadyGeneratedSamples);
+    void extendSequenceOdd(int alreadyGeneratedSamples);
+    void markOccupiedStrata(int alreadyGeneratedSamples);
+    void markOccupiedStrata1(SamplePMJ &pt, int NN);
+    void generateSamplePoint(int i, int j, int xhalf, int yhalf, float n, int N);
+    bool isOccupied(SamplePMJ &pt, int NN);
+    bool minDist(SamplePMJ& pt, float* min_dist);
+    SamplePMJ* instantiateArray(int size);
+    float generateRandomFloat();
+    void initialize_x_tree( Node& node, int i, int j, int shape, int nx, int ny );
+    void initialize_y_tree( Node& node, int i, int j, int shape, int nx, int ny );
+    void valid_x_stratum( Node& node, int i, int j, int nx, int ny );
+    void valid_y_stratum( Node& node, int i, int j, int nx, int ny );
+    SamplePMJ* grid_item(int i, int j ) const { return grid[ j * grid_dim + i ]; }
+    void set_grid_item( SamplePMJ* pt )
+    { 
+        int idx = int((*pt)[1]*grid_dim) * grid_dim + int((*pt)[0]*grid_dim);
+        grid[ idx ] = pt;
+    }
+};
+
+//------------------------------------------------------------------------------
 // PMJ02Sequence
 //------------------------------------------------------------------------------
 
