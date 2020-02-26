@@ -33,12 +33,9 @@ namespace slg {
 
 class SamplePMJ {
 private:
-    int dimension;
-    float* coordinates;
+    float coordinates[2];
 public:
-    SamplePMJ(int dimension = 2);
     float& operator[](int index);
-    void deleteSample();
 };
 
 struct Node

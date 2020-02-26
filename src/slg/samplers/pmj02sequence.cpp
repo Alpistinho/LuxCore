@@ -28,17 +28,9 @@ using namespace slg;
 // SamplePMJ
 //------------------------------------------------------------------------------
 
-SamplePMJ::SamplePMJ(int dimension) : dimension(dimension) {
-    coordinates = new float[dimension];
-}
-
 float& SamplePMJ::operator[](int index)
 {
     return coordinates[index];
-}
-
-void SamplePMJ::deleteSample() {
-    delete[] coordinates;
 }
 
 bool isPowerOfFour(unsigned int n) 
@@ -50,8 +42,6 @@ PMJ02SampleSequenceGenerator_Pharr::PMJ02SampleSequenceGenerator_Pharr(luxrays::
 }
 
 PMJ02SampleSequenceGenerator_Pharr::~PMJ02SampleSequenceGenerator_Pharr() {
-    for(int i = 0; i < numberOfSamplesToGenerate; i++)
-        generatedSamples[i].deleteSample();
     delete[](generatedSamples);
     delete[](xhalves);
     delete[](yhalves);
@@ -237,7 +227,7 @@ void PMJ02SampleSequenceGenerator_Pharr::generateSamplePoint(int i, int j, int x
                       ceil( lg2NN / 2. ), ny, nx );
    valid_y_stratum( node_y, i*ny_2 + (is_even ? xhalf : 0), j*nx_2 + yhalf, ny, nx );
 
-    SamplePMJ candpt = SamplePMJ(2);
+    SamplePMJ candpt = SamplePMJ();
 
     int i_pt = x_offsets[ 0 ];
     int j_pt = y_offsets[ 0 ];
@@ -333,7 +323,7 @@ bool PMJ02SampleSequenceGenerator_Pharr::minDist(SamplePMJ& pt, float* min_dist)
 SamplePMJ *PMJ02SampleSequenceGenerator_Pharr::instantiateArray(int size) {
     SamplePMJ* toReturn  = new SamplePMJ  [size];
     for(int i = 0; i < size; i++)
-        toReturn[i] = SamplePMJ(2);
+        toReturn[i] = SamplePMJ();
     return toReturn;
 }
 
@@ -435,12 +425,12 @@ PMJ02SampleSequenceGenerator_Pharr::valid_y_stratum( Node& node, int i, int j, i
 //------------------------------------------------------------------------------
 
 PMJ02Sequence::PMJ02Sequence(luxrays::RandomGenerator *rnd) : 
-	rndGen(rnd), num_samples(1024) {
+	rndGen(rnd), num_samples(4096) {
     localRng = false;
 
 }
 
-PMJ02Sequence::PMJ02Sequence(const u_int seed) : num_samples(1024) {
+PMJ02Sequence::PMJ02Sequence(const u_int seed) : num_samples(4096) {
     localRng = true;
     rndGen = new luxrays::RandomGenerator(seed);
 }
@@ -461,19 +451,16 @@ void PMJ02Sequence::RequestSamples(const u_int size) {
 	for (u_int i = 0; i < tablesToGenerate; i++) {
 		samplePoints[i].resize(num_samples);
 		PMJ02SampleSequenceGenerator_Pharr g = PMJ02SampleSequenceGenerator_Pharr(rndGen);
-		g.ProgressiveMultiJittered02Algorithm2D(num_samples, 1);
+		g.ProgressiveMultiJittered02Algorithm2D(num_samples, 100);
 		shuffle(g.generatedSamples, num_samples);
 		for (u_int j = 0; j < num_samples; j++) {
 			SamplePMJ s = g.generatedSamples[j];
 			std::memcpy(&samplePoints[i][j], &s, sizeof(SamplePMJ));
-			SLG_LOG(s[0] << " " << s[1]);
-			SLG_LOG(samplePoints[i][j][0] << " " << samplePoints[i][j][1]);
 		}
 	}
-	SLG_LOG("after: " << samplePoints.size() << " " << samplePoints[0].size());
+	// SLG_LOG("after: " << samplePoints.size() << " " << samplePoints[0].size());
 	for (u_int i = 0; i < tablesToGenerate; i++) {
 		for (u_int j = 0; j < num_samples; j++) {
-			SLG_LOG(samplePoints[i][j][0] << " " << samplePoints[i][j][1]);
 		}
 	}
 	SLG_LOG("Generated " << num_samples << " samples for " << size << " dimensions on " << tablesToGenerate << " tables");
@@ -494,10 +481,8 @@ std::vector<float> PMJ02Sequence::GetSamples(const u_int pass) {
 	samples.reserve(samplePoints.size() * 2);
 	// TODO: Implement fallback after more samples than requested
 	for (u_int i = 0; i < samplePoints.size(); i++) {
-		SLG_LOG(samplePoints[i][pass][0] << " " << samplePoints[i][pass][1]);
 		samples.push_back(samplePoints[i][pass][0]);
 		samples.push_back(samplePoints[i][pass][1]);
-		SLG_LOG(samples[2*i] << " " << samples[2*i + 1]);
 	}
 
 	return samples;
