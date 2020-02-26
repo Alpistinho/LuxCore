@@ -41,17 +41,11 @@ bool isPowerOfFour(unsigned int n)
 PMJ02SampleSequenceGenerator_Pharr::PMJ02SampleSequenceGenerator_Pharr(luxrays::RandomGenerator *rnd): randomNumberGenerator(rnd) {
 }
 
-PMJ02SampleSequenceGenerator_Pharr::~PMJ02SampleSequenceGenerator_Pharr() {
-    delete[](generatedSamples);
-    delete[](xhalves);
-    delete[](yhalves);
-}
-
 void PMJ02SampleSequenceGenerator_Pharr::ProgressiveMultiJittered02Algorithm2D(int numberOfSamplesToGenerate,  
                                                                                int numberOfCandidates) {
     this->numberOfSamplesToGenerate = numberOfSamplesToGenerate;
     int arraySize = 4*numberOfSamplesToGenerate;
-    generatedSamples = instantiateArray(arraySize);
+    generatedSamples.resize(arraySize);
     int next_pow_4_samples = numberOfSamplesToGenerate;
     if ( !isPowerOfFour( next_pow_4_samples ) )
     {
@@ -68,8 +62,8 @@ void PMJ02SampleSequenceGenerator_Pharr::ProgressiveMultiJittered02Algorithm2D(i
        std::vector< bool > temp( next_pow_4_samples, false );
        occupiedStrata.push_back( temp );
     }
-    xhalves = new int[ 4 * next_pow_4_samples ];
-    yhalves = new int[4*next_pow_4_samples];
+    xhalves.resize(4 * next_pow_4_samples);
+    yhalves.resize(4*next_pow_4_samples);
 
     grid_dim = int(ceil(sqrt(next_pow_4_samples)));
     std::vector<SamplePMJ*> grid_temp(next_pow_4_samples, nullptr);
@@ -320,13 +314,6 @@ bool PMJ02SampleSequenceGenerator_Pharr::minDist(SamplePMJ& pt, float* min_dist)
     return ( minSquareDist > 1 ? false : true );
 }
 
-SamplePMJ *PMJ02SampleSequenceGenerator_Pharr::instantiateArray(int size) {
-    SamplePMJ* toReturn  = new SamplePMJ  [size];
-    for(int i = 0; i < size; i++)
-        toReturn[i] = SamplePMJ();
-    return toReturn;
-}
-
 float PMJ02SampleSequenceGenerator_Pharr::generateRandomFloat() {
     return randomNumberGenerator->floatValue();
 }
@@ -440,8 +427,10 @@ PMJ02Sequence::~PMJ02Sequence() {
 }
 
 void PMJ02Sequence::RequestSamples(const u_int size) {
+    boost::lock_guard<boost::mutex> guard(sampleGenerationMtx);
     // Samples already requested
     if (samplePoints.size() > 0) return; 
+    
 	// We cannot generate an odd number of dimensions
 	u_int tablesToGenerate = (size / 2) + size % 2;
 
@@ -452,10 +441,10 @@ void PMJ02Sequence::RequestSamples(const u_int size) {
 		samplePoints[i].resize(num_samples);
 		PMJ02SampleSequenceGenerator_Pharr g = PMJ02SampleSequenceGenerator_Pharr(rndGen);
 		g.ProgressiveMultiJittered02Algorithm2D(num_samples, 100);
-		shuffle(g.generatedSamples, num_samples);
+		// shuffle(g.generatedSamples, num_samples);
 		for (u_int j = 0; j < num_samples; j++) {
 			SamplePMJ s = g.generatedSamples[j];
-			std::memcpy(&samplePoints[i][j], &s, sizeof(SamplePMJ));
+			samplePoints[i][j] = s;
 		}
 	}
 	// SLG_LOG("after: " << samplePoints.size() << " " << samplePoints[0].size());
@@ -488,7 +477,7 @@ std::vector<float> PMJ02Sequence::GetSamples(const u_int pass) {
 	return samples;
 }
 
-void PMJ02Sequence::shuffle(SamplePMJ points[], u_int size) {
+void PMJ02Sequence::shuffle(std::vector<SamplePMJ> points, u_int size) {
 
 	constexpr u_int odd[8] = { 0, 1, 4, 5, 10, 11, 14, 15 };
 	constexpr u_int even[8] = { 2, 3, 6, 7, 8, 9, 12, 13 };

@@ -21,6 +21,8 @@
 
 #include <vector>
 
+#include <boost/thread.hpp>
+
 #include "luxrays/core/randomgen.h"
 
 #include "slg/slg.h"
@@ -52,17 +54,16 @@ struct Node
 class PMJ02SampleSequenceGenerator_Pharr {
 public:
     PMJ02SampleSequenceGenerator_Pharr(luxrays::RandomGenerator *rnd);
-    ~PMJ02SampleSequenceGenerator_Pharr();
     void ProgressiveMultiJittered02Algorithm2D(int numberOfSamplesToGenerate, int numberOfCandidates = 10);
     void exportSampleSet(std::string &outputPath);
-    SamplePMJ* generatedSamples;
+    std::vector<SamplePMJ> generatedSamples;
 
 private:
     luxrays::RandomGenerator *randomNumberGenerator;
     int numberOfSamplesToGenerate;
     std::vector< std::vector<bool> > occupiedStrata;
-    int* xhalves;
-    int* yhalves;
+    std::vector<int> xhalves;
+    std::vector<int> yhalves;
     int numSamples;
     int numberOfCandidates;
     int grid_dim;
@@ -80,7 +81,6 @@ private:
     void generateSamplePoint(int i, int j, int xhalf, int yhalf, float n, int N);
     bool isOccupied(SamplePMJ &pt, int NN);
     bool minDist(SamplePMJ& pt, float* min_dist);
-    SamplePMJ* instantiateArray(int size);
     float generateRandomFloat();
     void initialize_x_tree( Node& node, int i, int j, int shape, int nx, int ny );
     void initialize_y_tree( Node& node, int i, int j, int shape, int nx, int ny );
@@ -124,7 +124,7 @@ private:
 		float y;
 	};
 
-	void shuffle(SamplePMJ points[], u_int size);
+	void shuffle(std::vector<SamplePMJ> points, u_int size);
 
 	// How many samples should be generated at once
 	u_int num_samples;
@@ -134,6 +134,8 @@ private:
 	std::vector<std::vector<SamplePMJ>> samplePoints;
 
     bool localRng;
+
+    boost::mutex sampleGenerationMtx;
 
 };
 
