@@ -153,7 +153,7 @@ void PMJ02Sampler::InitNewSample() {
 				pass = sharedData->GetNewPixelPass(pixelIndex);
 				if (rndGen->floatValue() > noise) {
 					// Skip this pixel and try the next one
-					pass = sharedData->GetNewPixelPass();
+					pass = sharedData->GetNewPixelPass(pixelIndex);
 					continue;
 				}
 			}
