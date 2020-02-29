@@ -441,7 +441,7 @@ void PMJ02Sequence::RequestSamples(const u_int size) {
 		samplePoints[i].resize(num_samples);
 		PMJ02SampleSequenceGenerator_Pharr g = PMJ02SampleSequenceGenerator_Pharr(rndGen);
 		g.ProgressiveMultiJittered02Algorithm2D(num_samples, 100);
-		// shuffle(g.generatedSamples, num_samples);
+		g.generatedSamples = shuffle(g.generatedSamples, num_samples);
 		for (u_int j = 0; j < num_samples; j++) {
 			SamplePMJ s = g.generatedSamples[j];
 			samplePoints[i][j] = s;
@@ -464,25 +464,27 @@ float PMJ02Sequence::GetSample(const u_int pass, const u_int index) {
 	return samplePoints[dimensionIndex][pass][index % 2];
 }
 
-std::vector<float> PMJ02Sequence::GetSamples(const u_int pass) {
+std::vector<float> PMJ02Sequence::GetSamples(const u_int pass, const u_int offset) {
 
 	std::vector<float> samples;
 	samples.reserve(samplePoints.size() * 2);
 	// TODO: Implement fallback after more samples than requested
+
+    const u_int currentPass = (pass + offset) % samplePoints[0].size();
+    // u_int currentPass = pass;
 	for (u_int i = 0; i < samplePoints.size(); i++) {
-		samples.push_back(samplePoints[i][pass][0]);
-		samples.push_back(samplePoints[i][pass][1]);
+		samples.push_back(samplePoints[i][currentPass][0]);
+		samples.push_back(samplePoints[i][currentPass][1]);
 	}
 
 	return samples;
 }
 
-void PMJ02Sequence::shuffle(std::vector<SamplePMJ> points, u_int size) {
+std::vector<SamplePMJ> PMJ02Sequence::shuffle(std::vector<SamplePMJ> points, u_int size) {
 
 	constexpr u_int odd[8] = { 0, 1, 4, 5, 10, 11, 14, 15 };
 	constexpr u_int even[8] = { 2, 3, 6, 7, 8, 9, 12, 13 };
 
-	u_int rng_index = 0;
 	for (u_int yy = 0; yy < size / 16; ++yy) {
 		for (u_int xx = 0; xx < 8; ++xx) {
 			u_int other = (u_int)(rndGen->floatValue() * (8.0f - xx) + xx);
@@ -497,5 +499,18 @@ void PMJ02Sequence::shuffle(std::vector<SamplePMJ> points, u_int size) {
 			points[even[xx] + yy * 16] = tmp;
 		}
 	}
+    return points;
 }
 
+// std::vector<SamplePMJ> PMJ02Sequence::shuffle(std::vector<SamplePMJ> points, u_int size) {
+
+//     for (u_int i = points.size(); i > 0; i--) { 
+//         u_int j = rndGen->uintValue() % points.size();
+//         const SamplePMJ tmp = points[i];
+//         points[i] = points[j];
+//         points[j] = tmp;
+//     } 
+
+//     return points;
+
+// }

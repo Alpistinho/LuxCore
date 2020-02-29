@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and     *
  * limitations under the License.                                          *
  ***************************************************************************/
+#include <string>
 
 #include <boost/lexical_cast.hpp>
 
@@ -91,8 +92,8 @@ float PMJ02SamplerSharedData::GetSample(const u_int pass, const u_int index) {
 	return pmj02sequence.GetSample(pass, index);;
 }
 
-std::vector<float> PMJ02SamplerSharedData::GetSamples(const u_int pass) {
-	return pmj02sequence.GetSamples(pass);
+std::vector<float> PMJ02SamplerSharedData::GetSamples(const u_int pass, const u_int offset) {
+	return pmj02sequence.GetSamples(pass, offset);
 }
 
 void PMJ02SamplerSharedData::RequestSamples(const u_int size) {
@@ -162,12 +163,12 @@ void PMJ02Sampler::InitNewSample() {
 			pixelX = 0;
 			pixelY = 0;
 		}
-		// std::vector<float> tmpSamples = sharedData->GetSamples(pass);
-		currentSamples = sharedData->GetSamples(pass);
-
-		// Shuffle array using Peter-Yates algorithm
 		seed[0] = pixelIndex;
 		seed[1] = 534613516;
+		
+		currentSamples = sharedData->GetSamples(pass, next_random());
+		
+		// Shuffle array using Peter-Yates algorithm
 		for (u_int i = (currentSamples.size()/2) - 1; i > 0; i--) { 
 			u_int j = next_random() % (currentSamples.size()/2);
 			j = j - (j % 2);
@@ -181,6 +182,16 @@ void PMJ02Sampler::InitNewSample() {
 			currentSamples[swapDimension] = tmp1;
 			currentSamples[swapDimension + 1] = tmp2;
 		} 
+
+		// if (pixelIndex == 12312) {
+		// 	std::ostringstream ss;
+		// 	for (u_int i = 0; i < currentSamples.size(); i++ ) {
+		// 		ss << currentSamples[i] << ",";
+		// 	}
+		// 	std::string s(ss.str());
+		// 	SLG_LOG("Sample: " << s);
+		// 	SLG_LOG("Next_random: " << next_random());
+		// } 
 
 		sample0 = pixelX + currentSamples[0];
 		sample1 = pixelY + currentSamples[1];
@@ -197,7 +208,6 @@ void PMJ02Sampler::RequestSamples(const SampleType smplType, const u_int size) {
 
 float PMJ02Sampler::GetSample(const u_int index) {
 	assert (index < requestedSamples);
-
 	switch (index) {
 		case 0:
 			return sample0;

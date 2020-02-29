@@ -107,7 +107,7 @@ public:
 	void RequestSamples(const u_int size);
 
 	float GetSample(const u_int pass, const u_int index);
-	std::vector<float> GetSamples(const u_int pass);
+	std::vector<float> GetSamples(const u_int pass, const u_int offset);
 
 private:
 	// Generates for a single pixel index
@@ -124,7 +124,7 @@ private:
 		float y;
 	};
 
-	void shuffle(std::vector<SamplePMJ> points, u_int size);
+	std::vector<SamplePMJ> shuffle(std::vector<SamplePMJ> points, u_int size);
 
 	// How many samples should be generated at once
 	u_int num_samples;
